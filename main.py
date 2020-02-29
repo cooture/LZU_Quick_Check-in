@@ -18,8 +18,13 @@ __date__   = 2020/2/19
                  ┗┻┛  ┗┻┛
 """
 import json
+from time import sleep
 
 import requests
+import time
+import smtplib
+from email.mime.text import MIMEText
+from email.header import Header
 
 
 def getMD5(card_id):
@@ -75,15 +80,58 @@ def submitInfo(info):
     return json.loads(response.text)
 
 
+def sendMail(time, to, id, resault, detile=""):
+    if to == "":
+        return
+    # 第三方 SMTP 服务
+    mail_host = "smtp.qq.com"  # 设置服务器
+    mail_user = "*******"  # TODO: 用户名
+    mail_pass = "*******"  # TODO: 口令
+
+    sender = '506660105@qq.com'
+    receivers = [to]  # 接收邮件，可设置为你的QQ邮箱或者其他邮箱
+
+    message = MIMEText(time + "学号：" + id + resault + '\n' + detile, 'plain', 'utf-8')
+    message['From'] = Header("rankin", 'utf-8')
+    message['To'] = Header(to, 'utf-8')
+
+    subject = resault
+    message['Subject'] = Header(subject, 'utf-8')
+    try:
+        print("sending email...")
+        smtpObj = smtplib.SMTP_SSL(mail_host, 465)
+        smtpObj.login(mail_user, mail_pass)
+        smtpObj.sendmail(sender, receivers, message.as_string())
+        print("邮件发送成功")
+    except smtplib.SMTPException as e:
+        print("发送邮件失败！ 错误原因" + e)
+
+
 if __name__ == '__main__':
-    cardID = "****"  # TODO：change your ID here
-    md5 = getMD5(cardID)['data']
-    info = getInfo(cardID, md5)
-    if info['code'] != 1:
-        print("无法打卡")
-        exit(0)
-    response = submitInfo(info)
-    if response['code'] == 1:
-        print("打卡成功")
-    else:
-        print("打卡失败")
+    cards = {
+        "***": "****@qq.com", # TODO: your id and email
+
+    }
+    while True:
+        now = int(time.strftime("%H", time.localtime()))
+        if now >= 1:
+            sleep(60 * 20)
+            continue
+        timeStamp = time.strftime("%Y-%m-%d %H:%M", time.localtime())
+        print("***************************")
+        print(time)
+        for cardID in cards.keys():
+            md5 = getMD5(cardID)['data']
+            info = getInfo(cardID, md5)
+            if info['code'] != 1:
+                print(cardID, "无法打卡")
+                sendMail(timeStamp, cards[cardID], cardID, "无法打卡")
+                continue
+            response = submitInfo(info)
+            if response['code'] == 1:
+                print(cardID, "打卡成功")
+                sendMail(timeStamp, cards[cardID], cardID, "打卡成功")
+            else:
+                print(cardID, "打卡失败")
+                sendMail(timeStamp, cards[cardID], cardID, "打卡失败", "未知错误，你来找我")
+            sleep(1)
