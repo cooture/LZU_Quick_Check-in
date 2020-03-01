@@ -4,10 +4,10 @@ auto check in for lzu students during COVID-19.
 
 ## Set up
 
-1. create virtual environment: `python -m venv venv`
-2. activate the environment: `source venv/bin/activate`
+1. create virtual environment: `python3 -m venv venv`
+2. activate the environment: `source ./venv/bin/activate`
 3. install requirements: `pip3 install -r requirements.txt`
-4. replace your email address.
+4. replace the demo email with your email address.
 
 ## Run
 
