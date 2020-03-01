@@ -165,6 +165,7 @@ if __name__ == '__main__':
                 if info['code'] != 1:
                     print(cardID, "无法打卡")
                     sendMail(timeStamp, cards[cardID], cardID, "无法打卡")
+                    flags[cardID] = True
                     continue
                 response = submitInfo(info)  # 打卡
                 if response['code'] == 1:
@@ -177,5 +178,7 @@ if __name__ == '__main__':
                              cardID, "打卡失败", "未知错误，你来找我")
                     flags[cardID] = True
                 time.sleep(1)
-        if all(flags.values()):  # 如果所有卡都打过了，sleep 60分钟
+        if all(flags.values()):  # 如果所有卡都打过了，sleep 50分钟
             time.sleep(60 * 50)
+        else:  # 否则sleep 15分钟
+            time.sleep(60 * 15)
