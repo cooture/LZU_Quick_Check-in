@@ -131,8 +131,8 @@ def sendMail(timestamp: str, to: str, id: str, result: str, detail="") -> None:
         smtpObj.login(mail_user, mail_pass)
         smtpObj.sendmail(sender, receivers, message.as_string())
         print("邮件发送成功")
-    except smtplib.SMTPException as e:
-        print("发送邮件失败！ 错误原因" + e)
+    except Exception as e:
+        print("发送邮件失败！ 错误原因" + str(e))
 
 
 if __name__ == '__main__':
