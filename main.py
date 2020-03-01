@@ -1,17 +1,5 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
-
-import json
-import time
-import smtplib
-from email.mime.text import MIMEText
-from email.header import Header
-
-import requests
-
-__author__ = 'Rankin'
-__date__ = '2020/2/19'
-
 """
 # code is far away from bugs with the god animal protecting
     I love animals. They taste delicious.
@@ -29,13 +17,22 @@ __date__ = '2020/2/19'
                  ┗┻┛  ┗┻┛
 """
 
+import json
+import time
+import smtplib
+from email.mime.text import MIMEText
+from email.header import Header
+
+import requests
+
+__author__ = 'Rankin RoseauHan'
+__date__ = '2020/2/19'
+
 
 def getMD5(card_id: str) -> json:
     """访问host获取返回值，从而获取md5值
-
     Arguments:
         card_id {str} -- 校园卡号
-
     Returns:
         json -- 网页返回值
     """
@@ -50,11 +47,9 @@ def getMD5(card_id: str) -> json:
 
 def getInfo(card_id: str, md5: str) -> json:
     """利用md5值和校园卡号访问网页，获取返回值
-
     Arguments:
         card_id {str} -- 校园卡号
         md5 {str} -- md5值
-
     Returns:
         json -- 网页返回值
     """
@@ -65,15 +60,14 @@ def getInfo(card_id: str, md5: str) -> json:
     host = "http://202.201.13.180:9037/grtbMrsb/getInfo"
     session = requests.session()
     response = session.post(host, get_info_data)
+    print(response.text)
     return json.loads(response.text)
 
 
 def submitInfo(info: json) -> json:
     """发送打卡信息
-
     Arguments:
         info {json} -- getInfo获取的返回值
-
     Returns:
         json -- 打卡返回值
     """
@@ -105,15 +99,13 @@ def submitInfo(info: json) -> json:
     return json.loads(response.text)
 
 
-def sendMail(time: str, to: str, id: str, result: str, detail="") -> None:
+def sendMail(timestamp: str, to: str, id: str, result: str, detail="") -> None:
     """发送邮件
-
     Arguments:
         time {str} -- 时间戳
         to {str} -- 收件人邮件
         id {str} -- 校园卡号
         result {str} -- 打卡结果
-
     Keyword Arguments:
         detail {str} -- 补充信息 (default: {""})
     """
@@ -127,8 +119,7 @@ def sendMail(time: str, to: str, id: str, result: str, detail="") -> None:
     sender = '506660105@qq.com'
     receivers = [to]  # 接收邮件，可设置为你的QQ邮箱或者其他邮箱
 
-    message = MIMEText(time + "学号：" + id + result +
-                       '\n' + detail, 'plain', 'utf-8')
+    message = MIMEText(timestamp + "学号：" + id + result + '\n' + detail, 'plain', 'utf-8')
     message['From'] = Header("rankin", 'utf-8')
     message['To'] = Header(to, 'utf-8')
 
@@ -140,8 +131,8 @@ def sendMail(time: str, to: str, id: str, result: str, detail="") -> None:
         smtpObj.login(mail_user, mail_pass)
         smtpObj.sendmail(sender, receivers, message.as_string())
         print("邮件发送成功")
-    except smtplib.SMTPException as e:
-        print("发送邮件失败！ 错误原因" + e)
+    except Exception as e:
+        print("发送邮件失败！ 错误原因" + str(e))
 
 
 if __name__ == '__main__':
@@ -152,12 +143,11 @@ if __name__ == '__main__':
     while True:
         now = int(time.strftime("%H", time.localtime()))
         if now >= 1:
-            flags = {item: False for item in cards.keys()}  # 1点后重置标志位
             time.sleep(60 * 20)
             continue
         timeStamp = time.strftime("%Y-%m-%d %H:%M", time.localtime())
         print("***************************")
-        print(time)
+        print(timeStamp)
         for cardID in cards.keys():
             if not flags[cardID]:  # 如果还未尝试打卡
                 md5 = getMD5(cardID)['data']  # 获取md5
@@ -179,6 +169,7 @@ if __name__ == '__main__':
                     flags[cardID] = True
                 time.sleep(1)
         if all(flags.values()):  # 如果所有卡都打过了，sleep 50分钟
+            flags = {item: False for item in cards.keys()}  # 打完了重置
             time.sleep(60 * 50)
         else:  # 否则sleep 15分钟
             time.sleep(60 * 15)
