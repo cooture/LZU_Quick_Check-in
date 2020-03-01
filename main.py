@@ -31,10 +31,8 @@ __date__ = '2020/2/19'
 
 def getMD5(card_id: str) -> json:
     """访问host获取返回值，从而获取md5值
-
     Arguments:
         card_id {str} -- 校园卡号
-
     Returns:
         json -- 网页返回值
     """
@@ -49,11 +47,9 @@ def getMD5(card_id: str) -> json:
 
 def getInfo(card_id: str, md5: str) -> json:
     """利用md5值和校园卡号访问网页，获取返回值
-
     Arguments:
         card_id {str} -- 校园卡号
         md5 {str} -- md5值
-
     Returns:
         json -- 网页返回值
     """
@@ -70,10 +66,8 @@ def getInfo(card_id: str, md5: str) -> json:
 
 def submitInfo(info: json) -> json:
     """发送打卡信息
-
     Arguments:
         info {json} -- getInfo获取的返回值
-
     Returns:
         json -- 打卡返回值
     """
@@ -107,13 +101,11 @@ def submitInfo(info: json) -> json:
 
 def sendMail(timestamp: str, to: str, id: str, result: str, detail="") -> None:
     """发送邮件
-
     Arguments:
         time {str} -- 时间戳
         to {str} -- 收件人邮件
         id {str} -- 校园卡号
         result {str} -- 打卡结果
-
     Keyword Arguments:
         detail {str} -- 补充信息 (default: {""})
     """
