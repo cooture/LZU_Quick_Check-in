@@ -22,6 +22,8 @@ import time
 import smtplib
 from email.mime.text import MIMEText
 from email.header import Header
+from SendSMS import sendSms
+
 
 import requests
 
@@ -135,6 +137,13 @@ def sendMail(timestamp: str, to: str, id: str, result: str, detail="") -> None:
         print("发送邮件失败！ 错误原因" + str(e))
 
 
+def sendMessage(timestamp: str, to: str, id: str, result: str, detail="") -> None:
+    if "@" not in to:
+        sendSms(timestamp, to, id, result)
+    else:
+        sendMail(timestamp, to, id, result)
+
+
 if __name__ == '__main__':
     cards = {
         "***": "****@qq.com",  # TODO: your id and email
@@ -154,18 +163,18 @@ if __name__ == '__main__':
                 info = getInfo(cardID, md5)  # 访问网页
                 if info['code'] != 1:
                     print(cardID, "无法打卡")
-                    sendMail(timeStamp, cards[cardID], cardID, "无法打卡")
+                    sendMessage(timeStamp, cards[cardID], cardID, "无法打卡")
                     flags[cardID] = True
                     continue
                 response = submitInfo(info)  # 打卡
                 if response['code'] == 1:
                     print(cardID, "打卡成功")
-                    sendMail(timeStamp, cards[cardID], cardID, "打卡成功")
+                    sendMessage(timeStamp, cards[cardID], cardID, "打卡成功")
                     flags[cardID] = True
                 else:
                     print(cardID, "打卡失败")
-                    sendMail(timeStamp, cards[cardID],
-                             cardID, "打卡失败", "未知错误，你来找我")
+                    sendMessage(timeStamp, cards[cardID],
+                             cardID, "打卡失败, 你来找我")
                     flags[cardID] = True
                 time.sleep(1)
         if all(flags.values()):  # 如果所有卡都打过了，sleep 50分钟

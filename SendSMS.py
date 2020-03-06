@@ -19,7 +19,7 @@ __date__   = 2020/3/5
 """
 
 
-def sendSms(num, timestamp, stu_id, res):
+def sendSms(timestamp, num, stu_id, res):
     from aliyunsdkcore.client import AcsClient
     from aliyunsdkcore.request import CommonRequest
     import json
