@@ -24,7 +24,6 @@ from email.mime.text import MIMEText
 from email.header import Header
 from SendSMS import sendSms
 
-
 import requests
 
 __author__ = 'Rankin RoseauHan'
@@ -101,6 +100,18 @@ def submitInfo(info: json) -> json:
     return json.loads(response.text)
 
 
+def readAddressBook():
+    data = {}
+    with open("website.txt", 'r') as file:
+        for line in file.readlines():
+            try:
+                key, val = line.split()
+                data[key] = val
+            except:
+                continue
+    return data
+
+
 def sendMail(timestamp: str, to: str, id: str, result: str, detail="") -> None:
     """发送邮件
     Arguments:
@@ -145,40 +156,30 @@ def sendMessage(timestamp: str, to: str, id: str, result: str, detail="") -> Non
 
 
 if __name__ == '__main__':
-    cards = {
-        "***": "****@qq.com",  # TODO: your id and email
-    }
-    flags = {item: False for item in cards.keys()}  # 标志位
+    cards = readAddressBook()
     while True:
         now = int(time.strftime("%H", time.localtime()))
-        if now >= 1:
+        if now >= 10 or now < 9:
             time.sleep(60 * 20)
             continue
         timeStamp = time.strftime("%Y-%m-%d %H:%M", time.localtime())
         print("***************************")
         print(timeStamp)
+        cards.clear()
+        cards = readAddressBook()
         for cardID in cards.keys():
-            if not flags[cardID]:  # 如果还未尝试打卡
-                md5 = getMD5(cardID)['data']  # 获取md5
-                info = getInfo(cardID, md5)  # 访问网页
-                if info['code'] != 1:
-                    print(cardID, "无法打卡")
-                    sendMessage(timeStamp, cards[cardID], cardID, "无法打卡")
-                    flags[cardID] = True
-                    continue
-                response = submitInfo(info)  # 打卡
-                if response['code'] == 1:
-                    print(cardID, "打卡成功")
-                    sendMessage(timeStamp, cards[cardID], cardID, "打卡成功")
-                    flags[cardID] = True
-                else:
-                    print(cardID, "打卡失败")
-                    sendMessage(timeStamp, cards[cardID],
-                             cardID, "打卡失败, 你来找我")
-                    flags[cardID] = True
-                time.sleep(1)
-        if all(flags.values()):  # 如果所有卡都打过了，sleep 50分钟
-            flags = {item: False for item in cards.keys()}  # 打完了重置
-            time.sleep(60 * 50)
-        else:  # 否则sleep 15分钟
-            time.sleep(60 * 15)
+            md5 = getMD5(cardID)['data']  # 获取md5
+            info = getInfo(cardID, md5)  # 访问网页
+            if info['code'] != 1:
+                print(cardID, "无法打卡")
+                sendMessage(timeStamp, cards[cardID], cardID, "无法打卡，请手动打卡")
+                continue
+            response = submitInfo(info)  # 打卡
+            if response['code'] == 1:
+                print(cardID, "打卡成功")
+                sendMessage(timeStamp, cards[cardID], cardID, "打卡成功")
+            else:
+                print(cardID, "打卡失败")
+                sendMessage(timeStamp, cards[cardID],
+                            cardID, "打卡失败, 你来找我")
+            time.sleep(10)
