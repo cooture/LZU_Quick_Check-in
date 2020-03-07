@@ -82,7 +82,7 @@ if (isset($_POST['api'])){
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link href="https://cdn.bootcss.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet">
-    <title>打卡设置</title>
+    <title>自动打卡</title>
     <style>
         body, html{
             max-width: 800px;
@@ -101,7 +101,7 @@ if (isset($_POST['api'])){
             <label for="exampleInputPassword1">学号：</label>
             <input type="text" class="form-control" id="stuid" placeholder="学号">
             <label for="exampleInputPassword1">联系方式：</label>
-             <input type="text" class="form-control" id="phone" placeholder="邮箱">
+             <input type="text" class="form-control" id="phone" placeholder="邮箱或电话（每日9点打卡）">
         </div>
         <a href="#" class="btn btn-primary" onclick="addWebsite()">增加</a>
     </div>
