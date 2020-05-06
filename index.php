@@ -144,7 +144,7 @@ if (isset($_POST['api'])){
 </script>
 
 <footer>
-  <p>仅供学习交流使用</p>
+  <p>仅供学习交流使用，本项目唯一测试地址<a href="http://daka.ranxb.com">daka.ranxb.com</a>, 功能仅供演示，对该项目打卡结果、其他衍生项目及其他后果概不负责, 其余自行搭建的项目请自行删除版权信息。</p>
   <p>开源地址: <a href="https://github.com/ranxuebin/LZU_Quick_Check-in">GitHub</a></p>
 </footer>
 </body>

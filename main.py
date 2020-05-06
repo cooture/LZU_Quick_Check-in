@@ -110,7 +110,7 @@ def submitInfo(info: json, now: int) -> json:
     host = "http://202.201.13.180:9037/grtbMrsb/submit"
     session = requests.session()
     response = session.post(host, info_data)
-    return json.loads(response.text)
+    return json.loads(response.text), info_data
 
 
 def readAddressBook():
@@ -191,10 +191,13 @@ if __name__ == '__main__':
                         print(cardID, "无法打卡")
                         sendMessage(timeStamp, cards[cardID], cardID, "信息错误，无法打卡")
                         continue
-                    response = submitInfo(info, now)  # 打卡
+                    response, info_data = submitInfo(info, now)  # 打卡
                     if response['code'] == 1:
                         print(cardID, "打卡成功", response)
-                        sendMessage(timeStamp, cards[cardID], cardID, "打卡成功")
+                        sendMessage(timeStamp, cards[cardID], cardID,
+                                    "打卡成功，" + ("早中晚温度:{},{},{}".format(info_data['zcwd'], info_data['zwwd'],
+                                                                     info_data['wswd']) if info_data[
+                                                                                               'sfzx'] == '1' else "好好在家呆着吧"))
                     else:
                         print(cardID, "打卡失败", response)
                         sendMessage(timeStamp, cards[cardID], cardID, "打卡失败, 你来找我")
