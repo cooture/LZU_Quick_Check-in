@@ -18,6 +18,7 @@
 """
 
 import json
+import random
 import time
 import smtplib
 from email.mime.text import MIMEText
@@ -28,6 +29,7 @@ import requests
 
 __author__ = 'Rankin RoseauHan'
 __date__ = '2020/2/19'
+DEBUG = True
 
 
 def getMD5(card_id: str) -> json:
@@ -43,6 +45,7 @@ def getMD5(card_id: str) -> json:
     }
     host = "http://202.201.13.180:9037/encryption/getMD5"
     response = session.post(host, data=get_md5_data)
+    print(response.text)
     return json.loads(response.text)
 
 
@@ -65,6 +68,7 @@ def getInfo(card_id: str, md5: str) -> json:
     return json.loads(response.text)
 
 
+
 def submitInfo(info: json) -> json:
     """发送打卡信息
     Arguments:
@@ -72,12 +76,14 @@ def submitInfo(info: json) -> json:
     Returns:
         json -- 打卡返回值
     """
-    info_data = info['data'][0]
+    # info = json.loads('''{"code":1,"message":"成功","data":{"fxdj":"0","list":[{"bh":"A4C181B1733B28B7E053831510AC5DEF","xykh":"320160939901","dwbm":"404","xm":"冉学斌","rysf":"1","sfzx":"0","sfcg":"0","szsf":"河北省","szds":"邯郸市","szxq":"复兴区","cgdd":null,"twfw":"0","sbr":null,"sbrq":"2020-05-04","sbzt":"0","sfgl":"0","gldd":null,"bllb":"0","jzyy":null,"xgjcjlsj":null,"xgjcjldd":null,"xgjcjlsm":null,"sfjctr":"0","jcrysm":null,"sbsj":null,"zcwd":null,"zcsbr":null,"zcsbsj":null,"zwwd":null,"zwsbr":null,"zwsbsj":null,"wswd":null,"wssbr":null,"wssbsj":null,"dwmc":"信息科学与工程学院","rylb":"内地学生"}],"sjd":""}}''')
+    info_data = info['data']['list'][0]
+
     info_data = {
         "bh": info_data['bh'],
         "xykh": info_data['xykh'],
         "twfw": 0,
-        "sfzx": "0",
+        "sfzx": info_data['sfzx'],
         "sfgl": "0",
         "szsf": info_data['szsf'],
         "szds": info_data['szds'],
@@ -92,8 +98,14 @@ def submitInfo(info: json) -> json:
         "xgjcjlsj": "",
         "xgjcjldd": "",
         "xgjcjlsm": "",
-        "sbr": info_data['sbr']
+        "zcwd": round(random.uniform(36.8, 37.0), 3) if not (info_data['zcwd'] or info_data['zwwd'] or info_data['wswd']) else info_data['zcwd'], # 早
+        "zwwd": round(random.uniform(36.8, 37.0), 3) if info_data['zcwd'] and not info_data['zwwd'] else info_data['zwwd'], # 中
+        "wswd": round(random.uniform(36.8, 37.0), 3) if info_data['zcwd'] and info_data['zwwd'] else info_data['wswd'], # 晚
+        "sbr": info_data['sbr'],
+        "sjd": info['data']['sjd']
     }
+    print(info_data)
+    # exit(code=0)
     host = "http://202.201.13.180:9037/grtbMrsb/submit"
     session = requests.session()
     response = session.post(host, json=info_data)
@@ -101,14 +113,16 @@ def submitInfo(info: json) -> json:
 
 
 def readAddressBook():
+    if DEBUG:
+        return {'320160939901': '13038723610'}
     data = {}
-    with open("website.txt", 'r') as file:
+    with open("" if DEBUG else "../" + "website.txt", 'r') as file:
         for line in file.readlines():
             try:
-                key, val = line.split()
+                key, val = line.split()[:2]
                 data[key] = val
             except:
-                continue
+                print("目录解析失败:"+line)
     return data
 
 
@@ -149,6 +163,9 @@ def sendMail(timestamp: str, to: str, id: str, result: str, detail="") -> None:
 
 
 def sendMessage(timestamp: str, to: str, id: str, result: str, detail="") -> None:
+    if DEBUG:
+        print(timestamp, to, id, result)
+        return
     if "@" not in to:
         sendSms(timestamp, to, id, result)
     else:
@@ -159,27 +176,32 @@ if __name__ == '__main__':
     cards = readAddressBook()
     while True:
         now = int(time.strftime("%H", time.localtime()))
-        if now >= 10 or now < 9:
-            time.sleep(60 * 20)
-            continue
-        timeStamp = time.strftime("%Y-%m-%d %H:%M", time.localtime())
-        print("***************************")
-        print(timeStamp)
-        cards.clear()
-        cards = readAddressBook()
-        for cardID in cards.keys():
-            md5 = getMD5(cardID)['data']  # 获取md5
-            info = getInfo(cardID, md5)  # 访问网页
-            if info['code'] != 1:
-                print(cardID, "无法打卡")
-                sendMessage(timeStamp, cards[cardID], cardID, "无法打卡，请手动打卡")
-                continue
-            response = submitInfo(info)  # 打卡
-            if response['code'] == 1:
-                print(cardID, "打卡成功")
-                sendMessage(timeStamp, cards[cardID], cardID, "打卡成功")
-            else:
-                print(cardID, "打卡失败")
-                sendMessage(timeStamp, cards[cardID],
-                            cardID, "打卡失败, 你来找我")
-            time.sleep(10)
+        if (now > 7 and now >= 9) or (now > 11 and now >= 13) or (now > 19 and now >= 21) or DEBUG:
+            timeStamp = time.strftime("%Y-%m-%d %H:%M", time.localtime())
+            print("***************************")
+            print(timeStamp)
+            cards.clear()
+            cards = readAddressBook()
+            for cardID in cards.keys():
+                try:
+                    md5 = getMD5(cardID)['data']  # 获取md5
+                    info = getInfo(cardID, md5)  # 访问网页
+                    if info['code'] != 1:
+                        print(cardID, "无法打卡")
+                        sendMessage(timeStamp, cards[cardID], cardID, "信息错误，无法打卡")
+                        continue
+                    response = submitInfo(info)  # 打卡
+                    if response['code'] == 1:
+                        print(cardID, "打卡成功", response)
+                        sendMessage(timeStamp, cards[cardID], cardID, "打卡成功")
+                    else:
+                        print(cardID, "打卡失败", response)
+                        sendMessage(timeStamp, cards[cardID], cardID, "打卡失败, 你来找我")
+                except Exception as e:
+                    print(cardID, "打卡异常:" + str(e))
+                    sendMessage(timeStamp, cards[cardID], cardID, "无法打卡，请手动打卡")
+                time.sleep(10)
+            if DEBUG:
+                exit(0)
+            time.sleep(60 * 60 * 2)
+        time.sleep(60 * 20)
