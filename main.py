@@ -191,6 +191,8 @@ if __name__ == '__main__':
                         print(cardID, "无法打卡")
                         sendMessage(timeStamp, cards[cardID], cardID, "信息错误，无法打卡")
                         continue
+                    if now >= 9 and info['data']['list'][0]['sfzx'] == '0':
+                        continue
                     response, info_data = submitInfo(info, now)  # 打卡
                     if response['code'] == 1:
                         print(cardID, "打卡成功", response)
