@@ -45,7 +45,7 @@ def getMD5(card_id: str) -> json:
     }
     host = "http://202.201.13.180:9037/encryption/getMD5"
     response = session.post(host, data=get_md5_data)
-    print(response.text)
+    print("md5:", response.text)
     return json.loads(response.text)
 
 
@@ -64,7 +64,7 @@ def getInfo(card_id: str, md5: str) -> json:
     host = "http://202.201.13.180:9037/grtbMrsb/getInfo"
     session = requests.session()
     response = session.post(host, get_info_data)
-    print(response.text)
+    print("info: ", response.text)
     return json.loads(response.text)
 
 
@@ -96,16 +96,16 @@ def submitInfo(info: json, now: int) -> json:
         "xgjcjlsj": "",
         "xgjcjldd": "",
         "xgjcjlsm": "",
-        "zcwd": round(random.uniform(36.8, 37.0), 1) if 7 <= now < 9 and info_data['sfzx'] == "1" else info_data[
+        "zcwd": round(random.uniform(36.3, 36.8), 1) if 7 <= now < 9 and info_data['sfzx'] == "1" else info_data[
             'zcwd'],  # 早
-        "zwwd": round(random.uniform(36.8, 37.0), 1) if 11 <= now < 13 and info_data['sfzx'] == "1" else info_data[
+        "zwwd": round(random.uniform(36.3, 36.8), 1) if 11 <= now < 13 and info_data['sfzx'] == "1" else info_data[
             'zwwd'],  # 中
-        "wswd": round(random.uniform(36.8, 37.0), 1) if 19 <= now < 21 and info_data['sfzx'] == "1" else info_data[
+        "wswd": round(random.uniform(36.3, 36.8), 1) if 19 <= now < 21 and info_data['sfzx'] == "1" else info_data[
             'wswd'],  # 晚
         "sbr": info_data['sbr'],
         "sjd": info['data']['sjd']
     }
-    print(info_data)
+    print("submit: ", info_data)
     # exit(code=0)
     host = "http://202.201.13.180:9037/grtbMrsb/submit"
     session = requests.session()
@@ -120,7 +120,7 @@ def readAddressBook():
     with open(("" if DEBUG else "../") + "website.txt", 'r') as file:
         for line in file.readlines():
             try:
-                key, val = line.split()[:2]
+                key, val = line.split()[0], line.split()[1:-1]
                 data[key] = val
             except:
                 print("目录解析失败:" + line)
@@ -163,14 +163,18 @@ def sendMail(timestamp: str, to: str, id: str, result: str, detail="") -> None:
         print("发送邮件失败！ 错误原因" + str(e))
 
 
-def sendMessage(timestamp: str, to: str, id: str, result: str, detail="") -> None:
+def sendMessage(timestamp: str, to: list, id: str, result: str) -> None:
     if DEBUG:
-        print(timestamp, to, id, result)
+        [print(timestamp, i, id, result) for i in to]
         return
-    if "@" not in to:
-        sendSms(timestamp, to, id, result)
-    else:
-        sendMail(timestamp, to, id, result)
+    for i in to:
+        if "@" not in i:
+            sendSms(timestamp, i, id, result)
+        else:
+            sendMail(timestamp, i, id, result)
+
+
+
 
 
 if __name__ == '__main__':
@@ -196,10 +200,10 @@ if __name__ == '__main__':
                     response, info_data = submitInfo(info, now)  # 打卡
                     if response['code'] == 1:
                         print(cardID, "打卡成功", response)
-                        sendMessage(timeStamp, cards[cardID], cardID,
-                                    "打卡成功，" + ("早中晚温度:{},{},{}".format(info_data['zcwd'], info_data['zwwd'],
-                                                                     info_data['wswd']) if info_data[
-                                                                                               'sfzx'] == '1' else "好好在家呆着吧"))
+                        sendMessage(timeStamp, cards[cardID], cardID, "打卡成功，" + (
+                            ("早：{}".format(info_data['zcwd'])) if (7 <= now < 9) else (
+                                ("中：{}".format(info_data['zwwd'])) if (11 <= now < 13) else ("晚：{}".format(info_data['wswd'])))) if
+                        info_data['sfzx'] == '1' else "好好在家呆着吧")
                     else:
                         print(cardID, "打卡失败", response)
                         sendMessage(timeStamp, cards[cardID], cardID, "打卡失败, 你来找我")
